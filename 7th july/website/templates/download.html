@@ -1,0 +1,9 @@
+{% extends "index.html" %}
+{% block content %}
+<form method="POST" >
+    <label for="filename" style="color: antiquewhite;">Type the file number to be downloaded</label>
+    <input type="text" name = "filename">
+
+    <button class="op" type="submit">Download</button>
+</form>
+{% endblock %}

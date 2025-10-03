@@ -1,0 +1,8 @@
+{% extends "index.html" %}
+{% block content %}
+<form method="POST" action="/fileupload" enctype="multipart/form-data">
+    <input class="ok" type="file" name="file" style="color: antiquewhite;">
+
+    <button class="op">Submit</button>
+</form>
+{% endblock %}

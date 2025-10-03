@@ -1,0 +1,38 @@
+{% extends "index.html" %} {% block title %}Login{% endblock %} {% block content
+    %}
+    <form method="POST" >
+      <h3 align="center" style="color: antiquewhite; margin-bottom: 60px;">Login</h3>
+      <div class="form-group">
+        <label for="email"style="color:antiquewhite;">Email Address</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          placeholder="Enter email"
+        />
+      </div>
+      <div class="form-group">
+        <label for="password"style="color:antiquewhite;">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          name="password"
+          placeholder="Enter password"
+        />
+      </div>
+      <div class="form-group"style="color:antiquewhite;">
+        <label for="phoneno">Enter your phone number</label>
+        <input
+          type="text"
+          class="form-control"
+          id="phoneno"
+          name="phoneno"
+          placeholder="Enter your phone number"
+        />
+      </div>
+      <br />
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+{% endblock %}
