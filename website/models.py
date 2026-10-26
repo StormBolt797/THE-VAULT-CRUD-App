@@ -13,6 +13,13 @@ class Userfiles(db.Model):
      user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
      
 
+class Note(db.Model):
+     id = db.Column(db.Integer, primary_key=True)
+     content = db.Column(db.Text)
+     date = db.Column(db.DateTime, default=datetime.datetime.now)
+     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique = True)
@@ -20,3 +27,4 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(500))
     phoneno = db.Column(db.String(20),unique = True) 
     files = db.relationship('Userfiles')
+    notes = db.relationship('Note')

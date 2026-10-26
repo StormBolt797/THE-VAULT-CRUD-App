@@ -1,125 +1,200 @@
 {% extends "index.html" %}
 {% block title %}Vaultbox - The Vault{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-    <div class="mb-2">
-        <h2 class="mb-1" style="font-weight: 800; letter-spacing: -0.5px;">Vaultbox</h2>
-        <p class="text-muted mb-0">AES-256 encrypted cloud storage & records</p>
-    </div>
-    <div class="mb-2">
-        <a href="/fileupload" class="btn btn-primary mr-2"><i class="fas fa-plus mr-1"></i> Upload File</a>
-        <a href="/notes" class="btn btn-outline-primary mr-2"><i class="fas fa-edit mr-1"></i> New Note</a>
-        <a href="/trash" class="btn btn-outline-secondary"><i class="fas fa-trash mr-1"></i> Trash</a>
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-md-7 mb-2">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text" style="background-color: #090a0d; border-color: var(--border-color); color: var(--text-secondary);">
-                    <i class="fas fa-search"></i>
-                </span>
+<div class="row">
+    <!-- Main Vaultbox Files Column -->
+    <div id="mainCol" class="col-lg-8 transition-all">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+            <div class="mb-2">
+                <h2 class="mb-1" style="font-weight: 800; letter-spacing: -0.5px;">Vaultbox</h2>
+                <p class="text-muted mb-0">AES-256 encrypted cloud storage & records</p>
             </div>
-            <input type="text" id="filesearch" class="form-control" placeholder="Search files by name..." onkeyup="filterfiles()">
+            <div class="mb-2">
+                <a href="/fileupload" class="btn btn-primary mr-2"><i class="fas fa-plus mr-1"></i> Upload File</a>
+                <a href="/trash" class="btn btn-outline-secondary mr-2"><i class="fas fa-trash mr-1"></i> Trash</a>
+                <button type="button" class="btn btn-outline-primary" onclick="toggleNotesPanel()">
+                    <i class="fas fa-comment-alt mr-1"></i> Notes <span class="badge badge-success ml-1">{{ notes|length }}</span>
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="col-md-5 mb-2 text-md-right">
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-outline-secondary active" onclick="filtertype('all', this)">All</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('image', this)">Images</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('doc', this)">Docs</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('note', this)">Notes</button>
-        </div>
-    </div>
-</div>
 
-<div class="card shadow-sm">
-    <div class="card-header d-flex justify-content-between align-items-center py-3">
-        <span style="font-weight: 700; font-size: 0.95rem;">
-            <i class="fas fa-lock mr-2" style="color: var(--accent-green);"></i>Encrypted Items
-        </span>
-        <span class="badge" id="itemcount" style="background-color: #1a1e24; color: #ffffff; border: 1px solid var(--border-color); font-weight: 600;">{{ files|length }} item(s)</span>
+        <div class="row mb-3">
+            <div class="col-md-7 mb-2">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" style="background-color: #090a0d; border-color: var(--border-color); color: var(--text-secondary);">
+                            <i class="fas fa-search"></i>
+                        </span>
+                    </div>
+                    <input type="text" id="filesearch" class="form-control" placeholder="Search files by name..." onkeyup="filterfiles()">
+                </div>
+            </div>
+            <div class="col-md-5 mb-2 text-md-right">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active" onclick="filtertype('all', this)">All</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('image', this)">Images</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('doc', this)">Docs</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <span style="font-weight: 700; font-size: 0.95rem;">
+                    <i class="fas fa-lock mr-2" style="color: var(--accent-green);"></i>Encrypted Items
+                </span>
+                <span class="badge" id="itemcount" style="background-color: #1a1e24; color: #ffffff; border: 1px solid var(--border-color); font-weight: 600;">{{ files|length }} item(s)</span>
+            </div>
+            <div class="card-body p-0">
+                {% if files and files|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="filestable">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Date</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in files %}
+                            {% set ext = item.filenames.rsplit('.', 1)[-1].lower() if '.' in item.filenames else '' %}
+                            {% set cat = 'image' if ext in ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] else ('doc' if ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv'] else 'other') %}
+                            <tr class="filerow" data-name="{{ item.filenames|lower }}" data-cat="{{ cat }}">
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td>
+                                    {% if cat == 'image' %}
+                                        <i class="fas fa-file-image mr-2" style="color: #4da3ff;"></i>
+                                    {% elif ext == 'pdf' %}
+                                        <i class="fas fa-file-pdf mr-2" style="color: #ff5c5c;"></i>
+                                    {% elif ext in ['zip', 'rar', 'tar', 'gz'] %}
+                                        <i class="fas fa-file-archive mr-2" style="color: #a855f7;"></i>
+                                    {% else %}
+                                        <i class="fas fa-file mr-2 text-secondary"></i>
+                                    {% endif %}
+                                    <span style="font-weight: 600; color: #ffffff;">{{ item.filenames }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge-type">{{ ext|upper if ext else 'FILE' }}</span>
+                                </td>
+                                <td class="text-muted" style="font-size: 0.85rem;">
+                                    {% if item.filesize and item.filesize > 1048576 %}
+                                        {{ (item.filesize / 1048576)|round(1) }} MB
+                                    {% elif item.filesize and item.filesize > 1024 %}
+                                        {{ (item.filesize / 1024)|round(1) }} KB
+                                    {% elif item.filesize %}
+                                        {{ item.filesize }} B
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted" style="font-size: 0.85rem;">
+                                    {% if item.date %}
+                                        {{ item.date.strftime('%b %d') }}
+                                    {% else %}
+                                        Today
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">
+                                    <a href="/share/{{ item.id }}" class="btn btn-sm btn-outline-secondary mr-1" title="Share link">
+                                        <i class="fas fa-share-alt"></i>
+                                    </a>
+                                    <a href="/download/{{ item.id }}" class="btn btn-sm btn-outline-primary mr-1" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <a href="/delete/{{ item.id }}" class="btn btn-sm btn-outline-danger" title="Move to trash">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open text-muted mb-3" style="font-size: 3.5rem; opacity: 0.5;"></i>
+                    <h5 style="font-weight: 700;">Your vaultbox is empty</h5>
+                    <p class="text-muted">Upload files or type notes in the chat panel to store them safely.</p>
+                    <a href="/fileupload" class="btn btn-primary mt-2"><i class="fas fa-plus mr-1"></i> Upload File</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    <div class="card-body p-0">
-        {% if files and files|length > 0 %}
-        <div class="table-responsive">
-            <table class="table table-hover" id="filestable">
-                <thead>
-                    <tr>
-                        <th style="width: 40px;">#</th>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Size</th>
-                        <th>Date Stored</th>
-                        <th class="text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in files %}
-                    {% set ext = item.filenames.rsplit('.', 1)[-1].lower() if '.' in item.filenames else '' %}
-                    {% set cat = 'image' if ext in ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] else ('doc' if ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv'] else ('note' if ext in ['txt', 'md'] else 'other')) %}
-                    <tr class="filerow" data-name="{{ item.filenames|lower }}" data-cat="{{ cat }}">
-                        <td class="text-muted">{{ loop.index }}</td>
-                        <td>
-                            {% if cat == 'image' %}
-                                <i class="fas fa-file-image mr-2" style="color: #4da3ff;"></i>
-                            {% elif ext == 'pdf' %}
-                                <i class="fas fa-file-pdf mr-2" style="color: #ff5c5c;"></i>
-                            {% elif cat == 'note' %}
-                                <i class="fas fa-file-alt mr-2" style="color: #ffbc00;"></i>
-                            {% elif ext in ['zip', 'rar', 'tar', 'gz'] %}
-                                <i class="fas fa-file-archive mr-2" style="color: #a855f7;"></i>
-                            {% else %}
-                                <i class="fas fa-file mr-2 text-secondary"></i>
-                            {% endif %}
-                            <span style="font-weight: 600; color: #ffffff;">{{ item.filenames }}</span>
-                        </td>
-                        <td>
-                            <span class="badge-type">{{ ext|upper if ext else 'FILE' }}</span>
-                        </td>
-                        <td class="text-muted" style="font-size: 0.85rem;">
-                            {% if item.filesize and item.filesize > 1048576 %}
-                                {{ (item.filesize / 1048576)|round(1) }} MB
-                            {% elif item.filesize and item.filesize > 1024 %}
-                                {{ (item.filesize / 1024)|round(1) }} KB
-                            {% elif item.filesize %}
-                                {{ item.filesize }} B
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td class="text-muted" style="font-size: 0.85rem;">
-                            {% if item.date %}
-                                {{ item.date.strftime('%b %d, %Y') }}
-                            {% else %}
-                                Today
-                            {% endif %}
-                        </td>
-                        <td class="text-right">
-                            <a href="/share/{{ item.id }}" class="btn btn-sm btn-outline-secondary mr-1" title="Get share link">
-                                <i class="fas fa-share-alt"></i>
-                            </a>
-                            <a href="/download/{{ item.id }}" class="btn btn-sm btn-outline-primary mr-1" title="Download">
-                                <i class="fas fa-download"></i>
-                            </a>
-                            <a href="/delete/{{ item.id }}" class="btn btn-sm btn-outline-danger" title="Move to trash">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
-                        </td>
-                    </tr>
+
+    <!-- Right End Collapsible WhatsApp-Style Notes Column -->
+    <div id="notesCol" class="col-lg-4 transition-all">
+        <div class="card shadow-sm d-flex flex-column" style="height: 80vh; border-color: var(--border-color); background-color: #0c0e12;">
+            <!-- Header with Download & Close -->
+            <div class="card-header py-3 d-flex justify-content-between align-items-center" style="background-color: #15181e;">
+                <div class="d-flex align-items-center">
+                    <i class="fab fa-whatsapp mr-2" style="color: var(--accent-green); font-size: 1.25rem;"></i>
+                    <span style="font-weight: 700; font-size: 0.95rem;">Quick Notes</span>
+                </div>
+                <div>
+                    <a href="/downloadnotes" class="btn btn-sm btn-outline-primary mr-1" title="Download all notes as text">
+                        <i class="fas fa-download"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleNotesPanel()" title="Collapse column">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Messages Feed -->
+            <div id="notesFeed" class="card-body p-3" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                {% if notes and notes|length > 0 %}
+                    {% for n in notes %}
+                    <div class="p-2 rounded note-bubble" style="background-color: #171b22; border: 1px solid var(--border-color); align-self: flex-end; max-width: 90%; min-width: 50%;">
+                        <div id="note-display-{{ n.id }}">
+                            <div class="text-white" style="font-size: 0.92rem; white-space: pre-wrap; word-break: break-word;">{{ n.content }}</div>
+                            <div class="d-flex justify-content-between align-items-center mt-2 pt-1" style="border-top: 1px solid #23272f;">
+                                <span class="text-muted" style="font-size: 0.72rem;">{{ n.date.strftime('%b %d, %I:%M %p') if n.date else '' }}</span>
+                                <div>
+                                    <button class="btn btn-sm text-muted p-0 mr-2" onclick="showEditForm({{ n.id }})" title="Edit note" style="font-size: 0.75rem;">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <a href="/deletenote/{{ n.id }}" class="text-danger p-0" title="Delete note" style="font-size: 0.75rem;" onclick="return confirm('Delete this note?');">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- In-place Edit Form -->
+                        <div id="note-edit-{{ n.id }}" style="display: none;">
+                            <form action="/editnote/{{ n.id }}" method="POST">
+                                <textarea name="content" class="form-control form-control-sm mb-2" rows="2" style="font-size: 0.85rem;">{{ n.content }}</textarea>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mr-1 py-0 px-2" style="font-size: 0.75rem;" onclick="hideEditForm({{ n.id }})">Cancel</button>
+                                    <button type="submit" class="btn btn-sm btn-primary py-0 px-2" style="font-size: 0.75rem;">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
+                {% else %}
+                    <div class="text-center my-auto text-muted">
+                        <i class="fas fa-feather-alt mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                        <p class="small mb-0">No notes yet.<br>Type below and hit send!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- WhatsApp Input Bar -->
+            <div class="p-2" style="background-color: #15181e; border-top: 1px solid var(--border-color);">
+                <form action="/addnote" method="POST" class="d-flex align-items-center mb-0">
+                    <input type="text" name="note" class="form-control mr-2" placeholder="Type a note..." required autocomplete="off" style="border-radius: 20px; font-size: 0.9rem; padding-left: 1rem;">
+                    <button type="submit" class="btn btn-primary rounded-circle" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-paper-plane" style="font-size: 0.85rem; margin-left: -2px;"></i>
+                    </button>
+                </form>
+            </div>
         </div>
-        {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-box-open text-muted mb-3" style="font-size: 3.5rem; opacity: 0.5;"></i>
-            <h5 style="font-weight: 700;">Your vaultbox is empty</h5>
-            <p class="text-muted">Upload files or write timestamped notes to store them safely.</p>
-            <a href="/fileupload" class="btn btn-primary mt-2"><i class="fas fa-plus mr-1"></i> Upload File</a>
-        </div>
-        {% endif %}
     </div>
 </div>
 
@@ -153,5 +228,37 @@ function filtertype(t, btn) {
     btn.classList.add('active');
     filterfiles();
 }
+
+function toggleNotesPanel() {
+    let notesCol = document.getElementById('notesCol');
+    let mainCol = document.getElementById('mainCol');
+    if (notesCol.style.display === 'none') {
+        notesCol.style.display = 'block';
+        mainCol.className = 'col-lg-8 transition-all';
+        scrollNotes();
+    } else {
+        notesCol.style.display = 'none';
+        mainCol.className = 'col-lg-12 transition-all';
+    }
+}
+
+function showEditForm(id) {
+    document.getElementById('note-display-' + id).style.display = 'none';
+    document.getElementById('note-edit-' + id).style.display = 'block';
+}
+
+function hideEditForm(id) {
+    document.getElementById('note-display-' + id).style.display = 'block';
+    document.getElementById('note-edit-' + id).style.display = 'none';
+}
+
+function scrollNotes() {
+    let feed = document.getElementById('notesFeed');
+    if (feed) feed.scrollTop = feed.scrollHeight;
+}
+
+window.onload = function() {
+    scrollNotes();
+};
 </script>
 {% endblock %}

@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import login_user,login_required,logout_user,current_user
 from . import db
 from flask import  flash
-from .models import Userfiles
+from .models import Userfiles, Note
 from .auth import login
 from .crypto import encryptbytes, decryptbytes
 import datetime
@@ -21,6 +21,7 @@ def userkey(uid):
 def home():# similar to signup in auth.py..refer that
     uid = session.get('m', current_user.id)
     files = Userfiles.query.filter_by(user_id=uid, isdeleted=False).all()
+    user_notes = Note.query.filter_by(user_id=uid).order_by(Note.date.asc()).all()
     if request.method =="POST":
         file = request.files['file']
        # m = request.files['email']
@@ -30,7 +31,7 @@ def home():# similar to signup in auth.py..refer that
         db.session.add(upload)#file.read reads the content in the file
         db.session.commit()
         return redirect(url_for('views.home'))
-    return render_template("home.html",user = current_user, files = files)
+    return render_template("home.html",user = current_user, files = files, notes = user_notes)
 
 @views.route('/fileupload',methods = ['GET','POST'])
 @login_required
@@ -182,6 +183,50 @@ def notes():
         flash("Note posted and updated! You can download it now!")
         return redirect(url_for('views.home'))
      return render_template('notes.html',user = current_user)
+
+@views.route('/addnote', methods=['POST'])
+@login_required
+def add_note():
+    uid = session.get('m', current_user.id)
+    text_content = request.form.get('note', '').strip()
+    if text_content:
+        newnote = Note(content=text_content, user_id=uid)
+        db.session.add(newnote)
+        db.session.commit()
+    return redirect(url_for('views.home'))
+
+@views.route('/editnote/<int:note_id>', methods=['POST'])
+@login_required
+def edit_note(note_id):
+    uid = session.get('m', current_user.id)
+    n = Note.query.filter_by(id=note_id, user_id=uid).first()
+    if n:
+        newtext = request.form.get('content', '').strip()
+        if newtext:
+            n.content = newtext
+            db.session.commit()
+    return redirect(url_for('views.home'))
+
+@views.route('/deletenote/<int:note_id>')
+@login_required
+def delete_note(note_id):
+    uid = session.get('m', current_user.id)
+    n = Note.query.filter_by(id=note_id, user_id=uid).first()
+    if n:
+        db.session.delete(n)
+        db.session.commit()
+    return redirect(url_for('views.home'))
+
+@views.route('/downloadnotes')
+@login_required
+def download_notes():
+    uid = session.get('m', current_user.id)
+    allnotes = Note.query.filter_by(user_id=uid).order_by(Note.date.asc()).all()
+    out = ""
+    for n in allnotes:
+        dt = n.date.strftime('%Y-%m-%d %H:%M:%S') if n.date else ''
+        out += f"[{dt}]\n{n.content}\n\n"
+    return send_file(BytesIO(out.encode('utf-8')), download_name="my_notes.txt", as_attachment=True)
 
 @views.route('/about')
 def about():

@@ -27,7 +27,7 @@ def create_app():#creates the website using flask
     app.register_blueprint(views, url_prefix='/') #the below two says that.. auth and view will have access to the website whatver page we are in and can access the pages in between
     app.register_blueprint(auth, url_prefix='/')
 
-    from .models import User,Userfiles
+    from .models import User,Userfiles,Note
     # creates database if its not already there
     with app.app_context():
         print("hi")
