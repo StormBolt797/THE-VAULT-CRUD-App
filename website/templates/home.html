@@ -1,9 +1,29 @@
 {% extends "index.html" %}
 {% block title %}Vaultbox - The Vault{% endblock %}
 {% block content %}
-<div class="row">
-    <!-- Main Vaultbox Files Column -->
-    <div id="mainCol" class="col-lg-8 transition-all">
+
+<!-- Share Link Alert / Modal Box if active -->
+{% if shareurl %}
+<div class="alert alert-dismissable fade show mb-4 p-3" role="alert" style="background-color: #0d1e16; border: 1px solid var(--accent-green); border-radius: 8px;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span style="font-weight: 700; color: #ffffff;"><i class="fas fa-link mr-2" style="color: var(--accent-green);"></i>Share Link Created for <span style="color: var(--accent-green);">{{ sharefile }}</span></span>
+        <button type="button" class="close text-white" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="input-group">
+        <input type="text" id="shareInput" class="form-control" value="{{ shareurl }}" readonly style="background-color: #08090b; border-color: #23272f; color: #ffffff;">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="button" onclick="copyShareLink()"><i class="fas fa-copy mr-1"></i> Copy Link</button>
+        </div>
+    </div>
+    <small class="text-muted mt-1 d-block"><i class="fas fa-clock mr-1"></i> This link is valid for <strong>24 hours</strong>. Anyone with this link can download this file without an account.</small>
+</div>
+{% endif %}
+
+<div class="position-relative overflow-hidden" style="min-height: 80vh;">
+    <!-- Main Left: Files Table -->
+    <div id="mainCol" style="transition: margin-right 0.3s ease;">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
             <div class="mb-2">
                 <h2 class="mb-1" style="font-weight: 800; letter-spacing: -0.5px;">Vaultbox</h2>
@@ -12,8 +32,8 @@
             <div class="mb-2">
                 <a href="/fileupload" class="btn btn-primary mr-2"><i class="fas fa-plus mr-1"></i> Upload File</a>
                 <a href="/trash" class="btn btn-outline-secondary mr-2"><i class="fas fa-trash mr-1"></i> Trash</a>
-                <button type="button" class="btn btn-outline-primary" onclick="toggleNotesPanel()">
-                    <i class="fas fa-comment-alt mr-1"></i> Notes <span class="badge badge-success ml-1">{{ notes|length }}</span>
+                <button type="button" id="openNotesBtn" class="btn btn-outline-primary" onclick="openNotesPanel()">
+                    <i class="fas fa-edit mr-1"></i> Quick Notes <span class="badge badge-success ml-1">{{ notes|length }}</span>
                 </button>
             </div>
         </div>
@@ -41,7 +61,7 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center py-3">
                 <span style="font-weight: 700; font-size: 0.95rem;">
-                    <i class="fas fa-lock mr-2" style="color: var(--accent-green);"></i>Encrypted Items
+                    <i class="fas fa-box-open mr-2" style="color: var(--accent-green);"></i>Contents of your vaultbox
                 </span>
                 <span class="badge" id="itemcount" style="background-color: #1a1e24; color: #ffffff; border: 1px solid var(--border-color); font-weight: 600;">{{ files|length }} item(s)</span>
             </div>
@@ -118,7 +138,7 @@
                 <div class="text-center py-5">
                     <i class="fas fa-box-open text-muted mb-3" style="font-size: 3.5rem; opacity: 0.5;"></i>
                     <h5 style="font-weight: 700;">Your vaultbox is empty</h5>
-                    <p class="text-muted">Upload files or type notes in the chat panel to store them safely.</p>
+                    <p class="text-muted">Upload files or type notes in the quick notes panel.</p>
                     <a href="/fileupload" class="btn btn-primary mt-2"><i class="fas fa-plus mr-1"></i> Upload File</a>
                 </div>
                 {% endif %}
@@ -126,32 +146,32 @@
         </div>
     </div>
 
-    <!-- Right End Collapsible WhatsApp-Style Notes Column -->
-    <div id="notesCol" class="col-lg-4 transition-all">
-        <div class="card shadow-sm d-flex flex-column" style="height: 80vh; border-color: var(--border-color); background-color: #0c0e12;">
-            <!-- Header with Download & Close -->
+    <!-- Right End Slide-Out Drawer / Column -->
+    <div id="notesPanel" style="position: absolute; top: 0; right: 0; width: 380px; height: 100%; transform: translateX(100%); transition: transform 0.3s ease; z-index: 100;">
+        <div class="card shadow-lg d-flex flex-column h-100" style="border: 1px solid var(--border-color); background-color: #0c0e12; border-radius: 8px;">
+            <!-- Header -->
             <div class="card-header py-3 d-flex justify-content-between align-items-center" style="background-color: #15181e;">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-edit mr-2" style="color: var(--accent-green); font-size: 1.15rem;"></i>
                     <span style="font-weight: 700; font-size: 0.95rem;">Quick Notes</span>
                 </div>
                 <div>
-                    <a href="/downloadnotes" class="btn btn-sm btn-outline-primary mr-1" title="Download all notes as text">
+                    <a href="/downloadnotes" class="btn btn-sm btn-outline-primary mr-1" title="Download notes as text">
                         <i class="fas fa-download"></i>
                     </a>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleNotesPanel()" title="Collapse column">
-                        <i class="fas fa-times"></i>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeNotesPanel()" title="Collapse into right wall">
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Scrollable Messages Feed -->
+            <!-- Notes List Feed -->
             <div id="notesFeed" class="card-body p-3" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px;">
                 {% if notes and notes|length > 0 %}
                     {% for n in notes %}
-                    <div class="p-2 rounded note-bubble" style="background-color: #171b22; border: 1px solid var(--border-color); align-self: flex-end; max-width: 90%; min-width: 50%;">
+                    <div class="p-2 rounded note-bubble" style="background-color: #171b22; border: 1px solid var(--border-color); align-self: flex-end; max-width: 92%; min-width: 55%;">
                         <div id="note-display-{{ n.id }}">
-                            <div class="text-white" style="font-size: 0.92rem; white-space: pre-wrap; word-break: break-word;">{{ n.content }}</div>
+                            <div class="text-white" style="font-size: 0.9rem; white-space: pre-wrap; word-break: break-word;">{{ n.content }}</div>
                             <div class="d-flex justify-content-between align-items-center mt-2 pt-1" style="border-top: 1px solid #23272f;">
                                 <span class="text-muted" style="font-size: 0.72rem;">{{ n.date.strftime('%b %d, %I:%M %p') if n.date else '' }}</span>
                                 <div>
@@ -180,12 +200,12 @@
                 {% else %}
                     <div class="text-center my-auto text-muted">
                         <i class="fas fa-feather-alt mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
-                        <p class="small mb-0">No notes yet.<br>Type below and hit send!</p>
+                        <p class="small mb-0">No quick notes yet.<br>Type below and hit send!</p>
                     </div>
                 {% endif %}
             </div>
 
-            <!-- WhatsApp Input Bar -->
+            <!-- Input Bar -->
             <div class="p-2" style="background-color: #15181e; border-top: 1px solid var(--border-color);">
                 <form action="/addnote" method="POST" class="d-flex align-items-center mb-0">
                     <input type="text" name="note" class="form-control mr-2" placeholder="Type a note..." required autocomplete="off" style="border-radius: 20px; font-size: 0.9rem; padding-left: 1rem;">
@@ -229,17 +249,21 @@ function filtertype(t, btn) {
     filterfiles();
 }
 
-function toggleNotesPanel() {
-    let notesCol = document.getElementById('notesCol');
-    let mainCol = document.getElementById('mainCol');
-    if (notesCol.style.display === 'none') {
-        notesCol.style.display = 'block';
-        mainCol.className = 'col-lg-8 transition-all';
-        scrollNotes();
-    } else {
-        notesCol.style.display = 'none';
-        mainCol.className = 'col-lg-12 transition-all';
+function openNotesPanel() {
+    let p = document.getElementById('notesPanel');
+    let m = document.getElementById('mainCol');
+    p.style.transform = 'translateX(0)';
+    if (window.innerWidth > 992) {
+        m.style.marginRight = '400px';
     }
+    scrollNotes();
+}
+
+function closeNotesPanel() {
+    let p = document.getElementById('notesPanel');
+    let m = document.getElementById('mainCol');
+    p.style.transform = 'translateX(100%)';
+    m.style.marginRight = '0';
 }
 
 function showEditForm(id) {
@@ -257,8 +281,12 @@ function scrollNotes() {
     if (feed) feed.scrollTop = feed.scrollHeight;
 }
 
-window.onload = function() {
-    scrollNotes();
-};
+function copyShareLink() {
+    let copyText = document.getElementById("shareInput");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    alert("Copied shareable link to clipboard! (Valid for 24 hours)");
+}
 </script>
 {% endblock %}

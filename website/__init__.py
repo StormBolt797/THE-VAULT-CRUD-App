@@ -39,6 +39,7 @@ def create_app():#creates the website using flask
             db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS filesize INTEGER DEFAULT 0'))
             db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS isdeleted BOOLEAN DEFAULT FALSE'))
             db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS sharetoken VARCHAR(100)'))
+            db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS shareexpires TIMESTAMP'))
             db.session.commit()
         except Exception:
             db.session.rollback()

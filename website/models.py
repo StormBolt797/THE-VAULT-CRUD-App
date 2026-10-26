@@ -9,6 +9,7 @@ class Userfiles(db.Model):
      filesize = db.Column(db.Integer, default=0)
      isdeleted = db.Column(db.Boolean, default=False)
      sharetoken = db.Column(db.String(100), nullable=True)
+     shareexpires = db.Column(db.DateTime, nullable=True)
      date = db.Column(db.DateTime, default=datetime.datetime.now)
      user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
      

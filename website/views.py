@@ -22,6 +22,8 @@ def home():# similar to signup in auth.py..refer that
     uid = session.get('m', current_user.id)
     files = Userfiles.query.filter_by(user_id=uid, isdeleted=False).all()
     user_notes = Note.query.filter_by(user_id=uid).order_by(Note.date.asc()).all()
+    shareurl = session.pop('share_modal_url', None)
+    sharefile = session.pop('share_modal_file', None)
     if request.method =="POST":
         file = request.files['file']
        # m = request.files['email']
@@ -31,7 +33,7 @@ def home():# similar to signup in auth.py..refer that
         db.session.add(upload)#file.read reads the content in the file
         db.session.commit()
         return redirect(url_for('views.home'))
-    return render_template("home.html",user = current_user, files = files, notes = user_notes)
+    return render_template("home.html",user = current_user, files = files, notes = user_notes, shareurl = shareurl, sharefile = sharefile)
 
 @views.route('/fileupload',methods = ['GET','POST'])
 @login_required
@@ -109,17 +111,20 @@ def share_file(file_id):
     uid = session.get('m', current_user.id)
     f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
     if f:
-        if not f.sharetoken:
-            f.sharetoken = str(uuid.uuid4())[:16]
-            db.session.commit()
+        f.sharetoken = str(uuid.uuid4())[:16]
+        f.shareexpires = datetime.datetime.now() + datetime.timedelta(hours=24)
+        db.session.commit()
         shareurl = url_for('views.public_file', token=f.sharetoken, _external=True)
-        flash(f'Shareable Link: {shareurl}', category='success')
+        session['share_modal_url'] = shareurl
+        session['share_modal_file'] = f.filenames
     return redirect(url_for('views.home'))
 
 @views.route('/s/<token>')
 def public_file(token):
     f = Userfiles.query.filter_by(sharetoken=token, isdeleted=False).first()
     if f:
+        if f.shareexpires and datetime.datetime.now() > f.shareexpires:
+            return "This share link has expired (24h limit reached).", 410
         dec = decryptbytes(f.datas, userkey(f.user_id))
         return send_file(BytesIO(dec), download_name=f.filenames, as_attachment=True)
     return "Link is invalid or has expired.", 404
