@@ -1,0 +1,68 @@
+{% extends "index.html" %}
+{% block title %}Trash - The Vault{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1" style="font-weight: 800; letter-spacing: -0.5px;">Trash Bin</h2>
+        <p class="text-muted mb-0">Soft-deleted files can be restored or permanently removed</p>
+    </div>
+    <div>
+        <a href="/" class="btn btn-outline-secondary"><i class="fas fa-arrow-left mr-1"></i> Back to Vaultbox</a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center py-3">
+        <span style="font-weight: 700; font-size: 0.95rem;"><i class="fas fa-trash-alt mr-2" style="color: #ff5c5c;"></i>Deleted Items</span>
+        <span class="badge" style="background-color: #1a1e24; color: #ffffff; border: 1px solid var(--border-color); font-weight: 600;">{{ files|length }} item(s)</span>
+    </div>
+    <div class="card-body p-0">
+        {% if files and files|length > 0 %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Name</th>
+                        <th>Original Date</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in files %}
+                    <tr>
+                        <td class="text-muted">{{ loop.index }}</td>
+                        <td>
+                            <i class="fas fa-file mr-2 text-muted"></i>
+                            <span style="font-weight: 600; color: #9aa0a6;">{{ item.filenames }}</span>
+                        </td>
+                        <td class="text-muted" style="font-size: 0.9rem;">
+                            {% if item.date %}
+                                {{ item.date.strftime('%b %d, %Y') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <a href="/restore/{{ item.id }}" class="btn btn-sm btn-outline-primary mr-2">
+                                <i class="fas fa-undo mr-1"></i> Restore
+                            </a>
+                            <a href="/purge/{{ item.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Permanently erase this file forever?');">
+                                <i class="fas fa-times mr-1"></i> Purge
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-trash text-muted mb-3" style="font-size: 3rem; opacity: 0.4;"></i>
+            <h5 style="font-weight: 700;">Trash is empty</h5>
+            <p class="text-muted">No deleted files found in your bin.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
