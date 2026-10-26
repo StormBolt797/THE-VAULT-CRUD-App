@@ -1,67 +1,42 @@
-# The Vault - CRUD Application
+# The Vault - Cloud-Native Encrypted Vaultbox
 
-A local web application built with Python and Flask that serves as a personal vault for storing, managing, and downloading files and notes securely using SQLite.
+A full-stack secure cloud storage and document vault platform built with Python, Flask, and PostgreSQL (with local SQLite fallback). Features client-isolated AES-256 binary encryption, time-expiring shareable download tokens, real-time file filtering, and soft-delete trash recovery.
 
 ---
 
-## Features
+## Key Features
 
-- **User Authentication & Authorization**:
-  - Secure user registration and login system.
-  - Passwords hashed using `werkzeug.security` (`generate_password_hash` / `check_password_hash`).
-  - Session and route protection managed via `flask_login`.
+- **End-to-End At-Rest File Encryption (AES-256)**:
+  - All binary payloads are dynamically encrypted using `cryptography.fernet` before persisting to PostgreSQL byte columns.
+  - Files are decrypted on the fly in volatile server memory (`io.BytesIO`) upon authorized retrieval.
 
-- **File Management (C.R.U.D)**:
-  - **Upload**: Store images, PDFs, and documents directly in the local SQLite database as binary data (`LargeBinary` / BLOB).
-  - **Download / Read**: Stream stored files back to the browser on demand via `BytesIO`.
-  - **Delete**: Permanently remove stored files from records.
+- **Expiring & Tokenized Shareable Links**:
+  - Authenticated users can generate cryptographically random tokenized URLs (`/s/<token>`) to delegate read-only downloads to external guests without exposing accounts.
 
-- **Personal Notes**:
-  - Inbuilt notepad feature allowing users to create and store timestamped personal notes associated with their account.
+- **Lifecycle & Soft-Delete Trash Bin**:
+  - Files moved to a dedicated Trash Bin instead of immediate destructive deletion, supporting one-click restoration or irreversible permanent purging.
+
+- **Real-Time Client-Side Search & Categorization**:
+  - Instant name-based search and categorical filtering (`All`, `Images`, `Documents`, `Notes`) with human-readable file sizes (`KB`, `MB`).
+
+- **Secure Authentication & Identity**:
+  - User registration and login protected by `werkzeug.security` salted password hashing (`scrypt`) and session control via `flask_login`.
+
+- **Hybrid Database Architecture**:
+  - Automatically targets cloud PostgreSQL when `DATABASE_URL` is set, seamlessly falling back to local SQLite (`database.db`) for offline development.
 
 ---
 
 ## Tech Stack
 
-- **Backend**: Python, Flask, Jinja2
-- **Database & ORM**: SQLite, Flask-SQLAlchemy
-- **Authentication**: Flask-Login, Werkzeug Security
-- **Frontend**: HTML5, CSS3, Bootstrap 4
+- **Backend**: Python 3, Flask, Jinja2, Gunicorn
+- **Database & ORM**: PostgreSQL (Cloud), SQLite (Local Fallback), Flask-SQLAlchemy
+- **Security & Crypto**: Cryptography (Fernet / AES-256), Werkzeug Security (`scrypt`), Secrets/UUID
+- **Frontend**: HTML5, CSS3, Bootstrap 4, FontAwesome, JavaScript
 
 ---
 
-## Project Structure
-
-```text
-THE-VAULT-CRUD-App/
-├── main.py                  # Application entry point
-├── requirements.txt         # Dependencies
-├── README.md                # Project documentation
-└── website/                 # Application package
-    ├── __init__.py          # App initialization & database configuration
-    ├── auth.py              # Authentication blueprint (login, signup, logout)
-    ├── models.py            # SQLAlchemy database models (User, Userfiles)
-    ├── views.py             # Core routes (file upload, download, delete, notes)
-    └── templates/           # Jinja2 HTML templates
-        ├── index.html       # Base layout & navigation bar
-        ├── home.html        # Main dashboard
-        ├── login.html       # User login page
-        ├── signup.html      # Account registration page
-        ├── fileupload.html  # File upload form
-        ├── download.html    # File download selector
-        ├── delete.html      # File deletion selector
-        └── notes.html       # Notes creator
-```
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.8 or higher installed on your system.
-
-### Installation & Local Setup
+## Local Setup
 
 1. **Clone the repository**:
    ```bash
@@ -69,7 +44,7 @@ THE-VAULT-CRUD-App/
    cd THE-VAULT-CRUD-App
    ```
 
-2. **Set up a virtual environment** *(optional but recommended)*:
+2. **Set up virtual environment**:
    ```bash
    python -m venv venv
    source venv/bin/activate       # On Windows: venv\Scripts\activate
@@ -77,20 +52,19 @@ THE-VAULT-CRUD-App/
 
 3. **Install dependencies**:
    ```bash
-   pip install -r requirements.txt flask_sqlalchemy flask_login
+   pip install -r requirements.txt
    ```
 
-4. **Run the application**:
+4. **Run locally**:
    ```bash
    python main.py
    ```
-
-5. **Open in browser**:
-   Navigate to `http://127.0.0.1:5000/`.
-   The SQLite database (`database.db`) is automatically initialized upon startup.
+   Open `http://127.0.0.1:5000/`. Local SQLite database is created automatically.
 
 ---
 
 ## Contact
 
-For any queries, reach out at `me25b122@smail.iitm.ac.in`.
+Developer: Siddharth R  
+Email: `siddharth.official77@gmail.com`  
+Phone: `+91 9384849418`
