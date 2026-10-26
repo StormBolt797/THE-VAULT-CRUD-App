@@ -1,70 +1,81 @@
-# The Vault - Cloud-Native Encrypted Vaultbox
+# The Vault
 
-A full-stack secure cloud storage and document vault platform built with Python, Flask, and PostgreSQL (with local SQLite fallback). Features client-isolated AES-256 binary encryption, time-expiring shareable download tokens, real-time file filtering, and soft-delete trash recovery.
+A web app built with Python and Flask for storing files and notes privately in the cloud. It encrypts uploaded files using AES-256 before saving them to a PostgreSQL database, lets you generate 24 hour shareable download links, has a trash bin with restore support, and includes a slide out quick notes panel.
+
+Live Demo: https://the-vault-wzzb.onrender.com
 
 ---
 
-## Key Features
+## Features
 
-- **End-to-End At-Rest File Encryption (AES-256)**:
-  - All binary payloads are dynamically encrypted using `cryptography.fernet` before persisting to PostgreSQL byte columns.
-  - Files are decrypted on the fly in volatile server memory (`io.BytesIO`) upon authorized retrieval.
+### AES-256 File Encryption
+Files are encrypted with `cryptography.fernet` (AES-256) before getting saved to the database. When a user requests a download, the app decrypts the file in memory using `io.BytesIO` and streams it directly to the browser. Raw files are never written to disk in plaintext.
 
-- **Expiring & Tokenized Shareable Links**:
-  - Authenticated users can generate cryptographically random tokenized URLs (`/s/<token>`) to delegate read-only downloads to external guests without exposing accounts.
+### 24-Hour Shareable Links
+Users can generate temporary download links for any file. These links use unique tokens (`/s/<token>`) and automatically expire after 24 hours so guests can download a file without creating an account.
 
-- **Lifecycle & Soft-Delete Trash Bin**:
-  - Files moved to a dedicated Trash Bin instead of immediate destructive deletion, supporting one-click restoration or irreversible permanent purging.
+### Trash Bin and File Recovery
+Deleting a file marks it as soft deleted instead of removing it immediately. You can view all deleted files in the Trash page, restore them back to your vaultbox, or permanently purge them.
 
-- **Real-Time Client-Side Search & Categorization**:
-  - Instant name-based search and categorical filtering (`All`, `Images`, `Documents`, `Notes`) with human-readable file sizes (`KB`, `MB`).
+### Quick Notes Panel
+A WhatsApp style side drawer on the right side of the screen. You can type quick notes, edit them in place, delete them, or download all notes as a text file.
 
-- **Secure Authentication & Identity**:
-  - User registration and login protected by `werkzeug.security` salted password hashing (`scrypt`) and session control via `flask_login`.
+### Search and Filter
+Filter your files instantly by name or by type (Images, Docs) using real time search on the client side.
 
-- **Hybrid Database Architecture**:
-  - Automatically targets cloud PostgreSQL when `DATABASE_URL` is set, seamlessly falling back to local SQLite (`database.db`) for offline development.
+### Authentication
+User accounts use `Flask-Login` for sessions and `werkzeug.security` for password hashing with salted `scrypt`.
+
+### Cloud and Local Database
+Uses PostgreSQL when hosted online (Render) via `DATABASE_URL`, and automatically falls back to local SQLite (`database.db`) when running offline on your computer.
 
 ---
 
 ## Tech Stack
 
-- **Backend**: Python 3, Flask, Jinja2, Gunicorn
-- **Database & ORM**: PostgreSQL (Cloud), SQLite (Local Fallback), Flask-SQLAlchemy
-- **Security & Crypto**: Cryptography (Fernet / AES-256), Werkzeug Security (`scrypt`), Secrets/UUID
-- **Frontend**: HTML5, CSS3, Bootstrap 4, FontAwesome, JavaScript
+* Python 3
+* Flask
+* PostgreSQL (production) and SQLite (local)
+* Flask-SQLAlchemy (ORM)
+* Flask-Login
+* Werkzeug (password hashing)
+* Cryptography (Fernet AES-256)
+* Gunicorn
+* HTML, CSS, Bootstrap 4, JavaScript
 
 ---
 
-## Local Setup
+## How to Run Locally
 
-1. **Clone the repository**:
+1. Clone the repo:
    ```bash
    git clone https://github.com/StormBolt797/THE-VAULT-CRUD-App.git
    cd THE-VAULT-CRUD-App
    ```
 
-2. **Set up virtual environment**:
+2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
-   source venv/bin/activate       # On Windows: venv\Scripts\activate
+   source venv/bin/activate
    ```
+   *(On Windows use `venv\Scripts\activate`)*
 
-3. **Install dependencies**:
+3. Install requirements:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Run locally**:
+4. Run the app:
    ```bash
    python main.py
    ```
-   Open `http://127.0.0.1:5000/`. Local SQLite database is created automatically.
+
+5. Open `http://127.0.0.1:5000/` in your browser. The SQLite database will be created automatically.
 
 ---
 
 ## Contact
 
 Developer: Siddharth R  
-Email: `siddharth.official77@gmail.com`  
-Phone: `+91 9384849418`
+Email: siddharth.official77@gmail.com  
+Phone: +91 9384849418
