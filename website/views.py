@@ -72,35 +72,22 @@ def delete():
 def notes():
      time = datetime.datetime.now()#datetime module is used to import date and time as a stamp for each notes
      if request.method == "POST":
-        try:
-            f = open(str(session.get('m',None))+'.txt','a')
-            a = request.form.get("note")
-            f.write(str(time)+':  '+a)# appends notes with timestamp eahc time
-            f.writelines('\n')
-            f.close()
-        except FileNotFoundError:
-            f = open(str(session.get('m',None))+'.txt','w')
-            a = request.form.get("note")
-            f.write(str(time)+':  '+a + '\n')
-            
-            f.close()
+        a = request.form.get("note")
+        note_line = str(time)+':  '+a+'\n'
         u = Userfiles.query.filter_by(filenames = str(session.get('m',None))+'.txt').first()
         print(u)
+        prev_content = ""
         if u:
+            try:
+                prev_content = u.datas.decode('utf-8')
+            except:
+                prev_content = ""
             db.session.delete(u)
             db.session.commit()
             # it appends on a new file and then deletes old file 
-        f = open(str(session.get('m',None))+'.txt','r')
-        a =''
-        try:
-            m = f.readlines()# read the contents fo the text file line by line, eahc line as an element in a list
-            for i in m:
-                a = a + i
-        except:
-            print("")
-        upload = Userfiles(filenames = str(session.get('m',None))+'.txt',datas=bytes(a, encoding='utf-8'),user_id = session.get('m',None))
+        new_content = prev_content + note_line
+        upload = Userfiles(filenames = str(session.get('m',None))+'.txt',datas=bytes(new_content, encoding='utf-8'),user_id = session.get('m',None))
         db.session.add(upload)# add this notefile to database
-        f.close()
         db.session.commit()
       
         flash("Note posted and updated! You can download it now!")
