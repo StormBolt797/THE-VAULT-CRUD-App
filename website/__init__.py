@@ -34,6 +34,7 @@ def create_app():#creates the website using flask
         db.create_all()# database created
         try:
             db.session.execute(text('ALTER TABLE "user" ALTER COLUMN phoneno TYPE VARCHAR(20)'))
+            db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password TYPE VARCHAR(500)'))
             db.session.commit()
         except Exception:
             db.session.rollback()
