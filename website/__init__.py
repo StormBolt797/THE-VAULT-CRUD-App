@@ -13,7 +13,9 @@ def create_app():#creates the website using flask
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sid')#useless unless we are going to publish iot on a domain
     db_url = os.environ.get('DATABASE_URL', f'sqlite:///{DB_NAME}')
     if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     app.config['SQLALCHEMY_DATABASE_URI']= db_url# linkjing this website with database called database.db
     db.init_app(app)# initialise or create the website and sets it to a variabel called app
 

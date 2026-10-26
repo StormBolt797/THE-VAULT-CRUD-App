@@ -3,4 +3,5 @@ flask_sqlalchemy
 flask_login
 werkzeug
 psycopg2-binary
+psycopg[binary]
 gunicorn
