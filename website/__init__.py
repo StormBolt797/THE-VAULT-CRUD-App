@@ -36,6 +36,9 @@ def create_app():#creates the website using flask
             db.session.execute(text('ALTER TABLE "user" ALTER COLUMN phoneno TYPE VARCHAR(20)'))
             db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password TYPE VARCHAR(500)'))
             db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS date TIMESTAMP DEFAULT CURRENT_TIMESTAMP'))
+            db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS filesize INTEGER DEFAULT 0'))
+            db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS isdeleted BOOLEAN DEFAULT FALSE'))
+            db.session.execute(text('ALTER TABLE userfiles ADD COLUMN IF NOT EXISTS sharetoken VARCHAR(100)'))
             db.session.commit()
         except Exception:
             db.session.rollback()
