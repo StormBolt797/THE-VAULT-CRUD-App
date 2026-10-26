@@ -1,10 +1,12 @@
 from . import db
 from flask_login import UserMixin
+import datetime
 # no explanation needed..two dtabases one for users and other for their files and has 5 or 6 columns each as specified below
 class Userfiles(db.Model):
      id = db.Column(db.Integer, primary_key=True)
      filenames = db.Column(db.String(1000))
      datas = db.Column(db.LargeBinary() )
+     date = db.Column(db.DateTime, default=datetime.datetime.now)
      user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
      
 

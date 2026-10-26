@@ -1,52 +1,43 @@
 {% extends "index.html" %}
 {% block title %}Login - The Vault{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-4">
+<div class="row justify-content-center mt-5">
     <div class="col-md-5">
         <div class="card shadow-sm">
-            <div class="card-header text-center py-3">
-                <h4 class="mb-0" style="font-weight: 700;">Welcome Back</h4>
-                <p class="text-muted small mb-0 mt-1">Sign in to access your secure vault</p>
+            <div class="card-header text-center py-4">
+                <i class="fas fa-shield-alt mb-2" style="font-size: 2rem; color: var(--accent-green);"></i>
+                <h4 class="mb-0" style="font-weight: 800; letter-spacing: -0.5px;">Sign In to The Vault</h4>
+                <p class="text-muted small mb-0 mt-1">Enter your credentials to access your vaultbox</p>
             </div>
             <div class="card-body p-4">
                 <form method="POST">
                     <div class="form-group mb-3">
-                        <label for="email" class="text-muted small text-uppercase">Email Address</label>
+                        <label for="email" class="text-muted small text-uppercase" style="font-weight: 600; letter-spacing: 0.5px;">Email Address</label>
                         <input
                             type="email"
-                            class="form-control"
+                            class="form-control py-2"
                             id="email"
                             name="email"
-                            placeholder="Enter your email"
+                            placeholder="name@example.com"
                             required
                         />
                     </div>
-                    <div class="form-group mb-3">
-                        <label for="password" class="text-muted small text-uppercase">Password</label>
+                    <div class="form-group mb-4">
+                        <label for="password" class="text-muted small text-uppercase" style="font-weight: 600; letter-spacing: 0.5px;">Password</label>
                         <input
                             type="password"
-                            class="form-control"
+                            class="form-control py-2"
                             id="password"
                             name="password"
                             placeholder="Enter your password"
                             required
                         />
                     </div>
-                    <div class="form-group mb-4">
-                        <label for="phoneno" class="text-muted small text-uppercase">Phone Number</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="phoneno"
-                            name="phoneno"
-                            placeholder="Registered phone number"
-                        />
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block py-2">Sign In</button>
+                    <button type="submit" class="btn btn-primary btn-block py-2 mb-3">Sign In</button>
                 </form>
-                <div class="text-center mt-4">
-                    <span class="text-muted small">Don't have an account? </span>
-                    <a href="/signup" style="color: #58a6ff; font-weight: 500;">Sign up</a>
+                <div class="text-center mt-3 pt-3" style="border-top: 1px solid var(--border-color);">
+                    <span class="text-muted small">Need an account? </span>
+                    <a href="/signup" style="color: var(--accent-green); font-weight: 600;">Create one</a>
                 </div>
             </div>
         </div>

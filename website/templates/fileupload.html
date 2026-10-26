@@ -1,19 +1,19 @@
 {% extends "index.html" %}
-{% block title %}Upload File{% endblock %}
+{% block title %}Upload - The Vault{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center mt-4">
     <div class="col-md-6">
         <div class="card shadow-sm">
-            <div class="card-header">
-                <i class="fas fa-upload mr-2"></i>Upload File to Vault
+            <div class="card-header py-3">
+                <span style="font-weight: 700;"><i class="fas fa-upload mr-2" style="color: var(--accent-green);"></i>Upload to Vaultbox</span>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <p class="text-muted small mb-4">
-                    Files are read as binary and stored directly into your encrypted cloud database row.
+                    Files are read as binary and preserved securely in your isolated database record.
                 </p>
                 <form method="POST" action="/fileupload" enctype="multipart/form-data">
                     <div class="form-group mb-4">
-                        <label class="text-muted small text-uppercase">Choose File</label>
+                        <label class="text-muted small text-uppercase" style="font-weight: 600; letter-spacing: 0.5px;">Choose File</label>
                         <input type="file" name="file" class="form-control" required style="padding: 0.35rem 0.5rem;">
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
