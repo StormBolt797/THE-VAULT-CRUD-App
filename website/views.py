@@ -8,18 +8,25 @@ from . import db
 from flask import  flash
 from .models import Userfiles
 from .auth import login
+from .crypto import encryptbytes, decryptbytes
 import datetime
+import uuid
 views = Blueprint('views',__name__)
+
+def userkey(uid):
+    return f"vaultkey{uid}"
 
 @views.route('/',methods = ['GET','POST'])
 @login_required
 def home():# similar to signup in auth.py..refer that
     uid = session.get('m', current_user.id)
-    files = Userfiles.query.filter_by(user_id=uid).all()
+    files = Userfiles.query.filter_by(user_id=uid, isdeleted=False).all()
     if request.method =="POST":
         file = request.files['file']
        # m = request.files['email']
-        upload = Userfiles(filenames = file.filename,datas=file.read(),user_id = session.get('m',None))
+        raw = file.read()
+        enc = encryptbytes(raw, userkey(uid))
+        upload = Userfiles(filenames = file.filename,datas=enc,filesize=len(raw),user_id = uid)
         db.session.add(upload)#file.read reads the content in the file
         db.session.commit()
         return redirect(url_for('views.home'))
@@ -28,16 +35,19 @@ def home():# similar to signup in auth.py..refer that
 @views.route('/fileupload',methods = ['GET','POST'])
 @login_required
 def fileupload():
+    uid = session.get('m', current_user.id)
     if request.method =="POST":
         print("ello")
         file = request.files['file']
         #up- im accessing the submitted file from server
         # ikm going to upload the above accessed dat to the datbase
        # m = request.files['email']
-        upload = Userfiles(filenames = file.filename,datas=file.read(),user_id = session.get('m',None))
+        raw = file.read()
+        enc = encryptbytes(raw, userkey(uid))
+        upload = Userfiles(filenames = file.filename,datas=enc,filesize=len(raw),user_id = uid)
         db.session.add(upload)
         db.session.commit()
-        flash('File successfully uploaded to your vault!', category='success')
+        flash('File successfully encrypted and uploaded to your vault!', category='success')
         return redirect(url_for('views.home'))
     return render_template("fileupload.html",user = current_user)
 
@@ -47,7 +57,8 @@ def download_file(file_id):
     uid = session.get('m', current_user.id)
     f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
     if f:
-        return send_file(BytesIO(f.datas), download_name=f.filenames, as_attachment=True)
+        dec = decryptbytes(f.datas, userkey(uid))
+        return send_file(BytesIO(dec), download_name=f.filenames, as_attachment=True)
     flash('File not found', category='error')
     return redirect(url_for('views.home'))
 
@@ -57,10 +68,60 @@ def delete_file(file_id):
     uid = session.get('m', current_user.id)
     f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
     if f:
+        f.isdeleted = True
+        db.session.commit()
+        flash('File moved to trash!', category='success')
+    return redirect(url_for('views.home'))
+
+@views.route('/trash')
+@login_required
+def trash():
+    uid = session.get('m', current_user.id)
+    trashfiles = Userfiles.query.filter_by(user_id=uid, isdeleted=True).all()
+    return render_template("trash.html", user = current_user, files = trashfiles)
+
+@views.route('/restore/<int:file_id>')
+@login_required
+def restore_file(file_id):
+    uid = session.get('m', current_user.id)
+    f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
+    if f:
+        f.isdeleted = False
+        db.session.commit()
+        flash('File restored to Vaultbox!', category='success')
+    return redirect(url_for('views.trash'))
+
+@views.route('/purge/<int:file_id>')
+@login_required
+def purge_file(file_id):
+    uid = session.get('m', current_user.id)
+    f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
+    if f:
         db.session.delete(f)
         db.session.commit()
-        flash('File deleted successfully!', category='success')
+        flash('File permanently erased!', category='success')
+    return redirect(url_for('views.trash'))
+
+@views.route('/share/<int:file_id>')
+@login_required
+def share_file(file_id):
+    uid = session.get('m', current_user.id)
+    f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
+    if f:
+        if not f.sharetoken:
+            f.sharetoken = str(uuid.uuid4())[:16]
+            db.session.commit()
+        shareurl = url_for('views.public_file', token=f.sharetoken, _external=True)
+        flash(f'Shareable Link: {shareurl}', category='success')
     return redirect(url_for('views.home'))
+
+@views.route('/s/<token>')
+def public_file(token):
+    f = Userfiles.query.filter_by(sharetoken=token, isdeleted=False).first()
+    if f:
+        dec = decryptbytes(f.datas, userkey(f.user_id))
+        return send_file(BytesIO(dec), download_name=f.filenames, as_attachment=True)
+    return "Link is invalid or has expired.", 404
 
 @views.route('/download', methods = ['GET','POST'])
 @login_required
@@ -94,23 +155,27 @@ def delete():
            return render_template("delete.html",user = current_user)
 @views.route('/notes', methods = ['GET','POST'])
 def notes():
+     uid = session.get('m', current_user.id if current_user.is_authenticated else None)
      time = datetime.datetime.now()#datetime module is used to import date and time as a stamp for each notes
      if request.method == "POST":
         a = request.form.get("note")
         note_line = str(time)+':  '+a+'\n'
-        u = Userfiles.query.filter_by(filenames = str(session.get('m',None))+'.txt').first()
+        u = Userfiles.query.filter_by(filenames = str(uid)+'.txt', user_id=uid).first()
         print(u)
         prev_content = ""
         if u:
             try:
-                prev_content = u.datas.decode('utf-8')
+                dec = decryptbytes(u.datas, userkey(uid))
+                prev_content = dec.decode('utf-8')
             except:
                 prev_content = ""
             db.session.delete(u)
             db.session.commit()
             # it appends on a new file and then deletes old file 
         new_content = prev_content + note_line
-        upload = Userfiles(filenames = str(session.get('m',None))+'.txt',datas=bytes(new_content, encoding='utf-8'),user_id = session.get('m',None))
+        rawbytes = bytes(new_content, encoding='utf-8')
+        enc = encryptbytes(rawbytes, userkey(uid))
+        upload = Userfiles(filenames = str(uid)+'.txt',datas=enc,filesize=len(rawbytes),user_id = uid)
         db.session.add(upload)# add this notefile to database
         db.session.commit()
       
@@ -125,5 +190,3 @@ def about():
 @views.route('/contact')
 def contact():
     return render_template('contact.html', user = current_user)
-
-
