@@ -26,6 +26,6 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique = True)
     firstname = db.Column(db.String(150))
     password = db.Column(db.String(500))
-    phoneno = db.Column(db.String(20),unique = True) 
+    phoneno = db.Column(db.String(20), nullable=True) 
     files = db.relationship('Userfiles')
     notes = db.relationship('Note')

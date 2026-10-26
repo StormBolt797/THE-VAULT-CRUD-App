@@ -49,24 +49,25 @@ def logout():
 @auth.route('/signup',methods=['GET','POST'])# checks if the current page is "/signup"
 def signup():# gets from user and posts to database(ourselves)
     if request.method == 'POST':#I HAV ALREADY DID FOR LOGIN..REFER THAT
-        email = request.form.get('email')
-        firstname = request.form.get('firstName')
-        password = request.form.get('password1')
-        phonenumber = request.form.get('phoneno')
-        print(email,firstname,password,phonenumber)
+        email = request.form.get('email', '').strip()
+        firstname = request.form.get('firstName', '').strip()
+        password = request.form.get('password1', '').strip()
+        print(email,firstname,password)
         print('hello')
         user = User.query.filter_by(email = email).first()
         if user:
-            flash('Email exists!try logging in..',category="error")
-        elif len(email)< 5 or len(firstname)<3 or len(password) < 3 or len(phonenumber) != 10:
-            flash('Make sure your details are correct: Email should be more than 4 charachters, Name and password should be more than three characters and phone number should be ten digits',category='error')
-            pass
+            flash('Email already exists. Try logging in.', category="error")
+        elif len(email) < 5 or '@' not in email:
+            flash('Please provide a valid email address (at least 5 characters with @).', category='error')
+        elif len(firstname) < 2:
+            flash('First name must be at least 2 characters.', category='error')
+        elif len(password) < 6:
+            flash('Password must be at least 6 characters long.', category='error')
         else:
-            new_user = User(email = email, firstname = firstname,password = generate_password_hash(password),phoneno =phonenumber)
+            new_user = User(email = email, firstname = firstname, password = generate_password_hash(password))
             db.session.add(new_user)# this adds the user if it isnt already in database
             db.session.commit()# saves the changes
-            flash("account successful",category='success')
+            flash("Account created successfully! Please sign in.", category='success')
             return redirect(url_for('auth.login'))
-            pass
 
     return render_template('signup.html',user=current_user)# user = current user keeps the user logged in when he shifts from one page to another
