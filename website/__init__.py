@@ -2,6 +2,7 @@
 import os
 from flask import Flask # flask(backend development software) import 
 from flask_sqlalchemy import SQLAlchemy #importing database
+from sqlalchemy import text
 from flask_login import LoginManager # gives u control over the logged in user..aslo used to authenticate
 
 db = SQLAlchemy()#databse establish
@@ -31,6 +32,11 @@ def create_app():#creates the website using flask
     with app.app_context():
         print("hi")
         db.create_all()# database created
+        try:
+            db.session.execute(text('ALTER TABLE "user" ALTER COLUMN phoneno TYPE VARCHAR(20)'))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
     
     login_manager = LoginManager()# use 'login manager module to keep the user logged in'
     login_manager.login_view = 'auth.login'
