@@ -1,4 +1,5 @@
 #importing modules
+import os
 from flask import Flask # flask(backend development software) import 
 from flask_sqlalchemy import SQLAlchemy #importing database
 from flask_login import LoginManager # gives u control over the logged in user..aslo used to authenticate
@@ -9,8 +10,11 @@ DB_NAME= "database.db"# datbase name  = database
 
 def create_app():#creates the website using flask
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'sid'#useless unless we are going to publish iot on a domain
-    app.config['SQLALCHEMY_DATABASE_URI']= f'sqlite:///{DB_NAME}'# linkjing this website with database called database.db
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sid')#useless unless we are going to publish iot on a domain
+    db_url = os.environ.get('DATABASE_URL', f'sqlite:///{DB_NAME}')
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI']= db_url# linkjing this website with database called database.db
     db.init_app(app)# initialise or create the website and sets it to a variabel called app
 
 
