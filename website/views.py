@@ -1,5 +1,5 @@
 from .auth import login
-from flask import Blueprint, render_template, request, session
+from flask import Blueprint, render_template, request, session, redirect, url_for
 from flask import Flask, render_template, request, send_file
 from io import BytesIO
 from flask_sqlalchemy import SQLAlchemy
@@ -14,14 +14,16 @@ views = Blueprint('views',__name__)
 @views.route('/',methods = ['GET','POST'])
 @login_required
 def home():# similar to signup in auth.py..refer that
+    uid = session.get('m', current_user.id)
+    files = Userfiles.query.filter_by(user_id=uid).all()
     if request.method =="POST":
         file = request.files['file']
        # m = request.files['email']
         upload = Userfiles(filenames = file.filename,datas=file.read(),user_id = session.get('m',None))
         db.session.add(upload)#file.read reads the content in the file
         db.session.commit()
-        return f'Uploaded:ss {file.filename}'
-    return render_template("home.html",user = current_user)
+        return redirect(url_for('views.home'))
+    return render_template("home.html",user = current_user, files = files)
 
 @views.route('/fileupload',methods = ['GET','POST'])
 @login_required
@@ -35,8 +37,30 @@ def fileupload():
         upload = Userfiles(filenames = file.filename,datas=file.read(),user_id = session.get('m',None))
         db.session.add(upload)
         db.session.commit()
-        return f'Uploaded: {file.filename}.. Go back to home page by hitting the back button on chrome.. im not gonna spend time on creating a back button'
+        flash('File successfully uploaded to your vault!', category='success')
+        return redirect(url_for('views.home'))
     return render_template("fileupload.html",user = current_user)
+
+@views.route('/download/<int:file_id>')
+@login_required
+def download_file(file_id):
+    uid = session.get('m', current_user.id)
+    f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
+    if f:
+        return send_file(BytesIO(f.datas), download_name=f.filenames, as_attachment=True)
+    flash('File not found', category='error')
+    return redirect(url_for('views.home'))
+
+@views.route('/delete/<int:file_id>')
+@login_required
+def delete_file(file_id):
+    uid = session.get('m', current_user.id)
+    f = Userfiles.query.filter_by(id=file_id, user_id=uid).first()
+    if f:
+        db.session.delete(f)
+        db.session.commit()
+        flash('File deleted successfully!', category='success')
+    return redirect(url_for('views.home'))
 
 @views.route('/download', methods = ['GET','POST'])
 @login_required
@@ -91,6 +115,15 @@ def notes():
         db.session.commit()
       
         flash("Note posted and updated! You can download it now!")
-        return render_template('home.html',user = current_user)
+        return redirect(url_for('views.home'))
      return render_template('notes.html',user = current_user)
+
+@views.route('/about')
+def about():
+    return render_template('about.html', user = current_user)
+
+@views.route('/contact')
+def contact():
+    return render_template('contact.html', user = current_user)
+
 

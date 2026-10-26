@@ -1,0 +1,42 @@
+{% extends "index.html" %}
+{% block title %}About - The Vault{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle mr-2"></i>About The Vault
+            </div>
+            <div class="card-body">
+                <h4 style="font-weight: 700; color: #58a6ff;">Next-Generation Document Security</h4>
+                <p class="text-muted mt-3">
+                    The Vault is a personal cloud storage platform engineered to provide a private, sovereign repository for your digital assets, notes, and records.
+                </p>
+
+                <h5 class="mt-4" style="font-weight: 600;">How Security & Storage Work:</h5>
+                <ul class="text-muted mt-2" style="line-height: 1.8;">
+                    <li>
+                        <strong class="text-light">Cryptographic Password Hashing:</strong> User passwords are never saved in plaintext. Credentials are salted and hashed using modern cryptographic algorithms (<span class="text-light">scrypt</span> via Werkzeug), protecting your master access even against database dumps.
+                    </li>
+                    <li>
+                        <strong class="text-light">Database-Level Binary BLOB Encapsulation:</strong> Unlike standard web drives that expose files in publicly addressable static web folders, The Vault digests your files into raw byte streams (<span class="text-light">BYTEA / BLOBs</span>) stored in isolated PostgreSQL records.
+                    </li>
+                    <li>
+                        <strong class="text-light">Zero Public Links / Memory Streaming:</strong> No persistent static links are ever generated for uploaded files. Downloads are reconstituted on-the-fly inside volatile application memory (<span class="text-light">io.BytesIO</span>) and streamed directly to your browser session.
+                    </li>
+                    <li>
+                        <strong class="text-light">Session-Scoped Isolation:</strong> Every record is linked strictly to your authenticated session ID. Cross-tenant leakage is prevented through server-level query filtering.
+                    </li>
+                </ul>
+
+                <hr style="border-top: 1px solid #30363d;" class="my-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Built with Python, Flask, and PostgreSQL</span>
+                    <a href="/contact" class="btn btn-sm btn-outline-primary">Get in Touch</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

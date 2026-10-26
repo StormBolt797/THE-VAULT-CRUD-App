@@ -1,38 +1,55 @@
-{% extends "index.html" %} {% block title %}Login{% endblock %} {% block content
-    %}
-    <form method="POST" >
-      <h3 align="center" style="color: antiquewhite; margin-bottom: 60px;">Login</h3>
-      <div class="form-group">
-        <label for="email"style="color:antiquewhite;">Email Address</label>
-        <input
-          type="email"
-          class="form-control"
-          id="email"
-          name="email"
-          placeholder="Enter email"
-        />
-      </div>
-      <div class="form-group">
-        <label for="password"style="color:antiquewhite;">Password</label>
-        <input
-          type="password"
-          class="form-control"
-          id="password"
-          name="password"
-          placeholder="Enter password"
-        />
-      </div>
-      <div class="form-group"style="color:antiquewhite;">
-        <label for="phoneno">Enter your phone number</label>
-        <input
-          type="text"
-          class="form-control"
-          id="phoneno"
-          name="phoneno"
-          placeholder="Enter your phone number"
-        />
-      </div>
-      <br />
-      <button type="submit" class="btn btn-primary">Login</button>
-    </form>
+{% extends "index.html" %}
+{% block title %}Login - The Vault{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header text-center py-3">
+                <h4 class="mb-0" style="font-weight: 700;">Welcome Back</h4>
+                <p class="text-muted small mb-0 mt-1">Sign in to access your secure vault</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="form-group mb-3">
+                        <label for="email" class="text-muted small text-uppercase">Email Address</label>
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="password" class="text-muted small text-uppercase">Password</label>
+                        <input
+                            type="password"
+                            class="form-control"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="phoneno" class="text-muted small text-uppercase">Phone Number</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="phoneno"
+                            name="phoneno"
+                            placeholder="Registered phone number"
+                        />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block py-2">Sign In</button>
+                </form>
+                <div class="text-center mt-4">
+                    <span class="text-muted small">Don't have an account? </span>
+                    <a href="/signup" style="color: #58a6ff; font-weight: 500;">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

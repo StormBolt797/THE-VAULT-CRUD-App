@@ -1,8 +1,29 @@
 {% extends "index.html" %}
+{% block title %}Notes{% endblock %}
 {% block content %}
-<form method="POST" >
-    <h4 style="color: antiquewhite;">POST A NOTE TO YOURSELF JUST FOR YOU AND YOU ALONEEE</h4>
-    <input type="text" name = "note" style="height:300px; width: 100%;">
-
-    <button class="op" type="submit" style="padding-top: 2px;margin-top: 8px;margin-left:500px;">POST</button>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-sticky-note mr-2"></i>Personal Notes</span>
+                <span class="badge badge-dark">Timestamped</span>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Each note is automatically stamped with the current date & time and appended to your personal text vault.
+                </p>
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="note" class="text-muted small text-uppercase">Write your note</label>
+                        <textarea class="form-control" name="note" id="note" rows="8" placeholder="Type your personal note here..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a href="/" class="btn btn-outline-secondary">Back to Drive</a>
+                        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save mr-1"></i> Save Note</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
