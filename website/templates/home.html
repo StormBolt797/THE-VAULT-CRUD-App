@@ -1,78 +1,110 @@
 {% extends "index.html" %}
 {% block title %}Vaultbox - The Vault{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+    <div class="mb-2">
         <h2 class="mb-1" style="font-weight: 800; letter-spacing: -0.5px;">Vaultbox</h2>
-        <p class="text-muted mb-0">Securely stored files and personal records</p>
+        <p class="text-muted mb-0">AES-256 encrypted cloud storage & records</p>
     </div>
-    <div>
+    <div class="mb-2">
         <a href="/fileupload" class="btn btn-primary mr-2"><i class="fas fa-plus mr-1"></i> Upload File</a>
-        <a href="/notes" class="btn btn-outline-primary"><i class="fas fa-edit mr-1"></i> New Note</a>
+        <a href="/notes" class="btn btn-outline-primary mr-2"><i class="fas fa-edit mr-1"></i> New Note</a>
+        <a href="/trash" class="btn btn-outline-secondary"><i class="fas fa-trash mr-1"></i> Trash</a>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-7 mb-2">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text" style="background-color: #090a0d; border-color: var(--border-color); color: var(--text-secondary);">
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
+            <input type="text" id="filesearch" class="form-control" placeholder="Search files by name..." onkeyup="filterfiles()">
+        </div>
+    </div>
+    <div class="col-md-5 mb-2 text-md-right">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary active" onclick="filtertype('all', this)">All</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('image', this)">Images</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('doc', this)">Docs</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filtertype('note', this)">Notes</button>
+        </div>
     </div>
 </div>
 
 <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center py-3">
-        <span style="font-weight: 700; font-size: 0.95rem;"><i class="fas fa-box-open mr-2" style="color: var(--accent-green);"></i>Stored Items</span>
-        <span class="badge" style="background-color: #1a1e24; color: #ffffff; border: 1px solid var(--border-color); font-weight: 600;">{{ files|length }} item(s)</span>
+        <span style="font-weight: 700; font-size: 0.95rem;">
+            <i class="fas fa-lock mr-2" style="color: var(--accent-green);"></i>Encrypted Items
+        </span>
+        <span class="badge" id="itemcount" style="background-color: #1a1e24; color: #ffffff; border: 1px solid var(--border-color); font-weight: 600;">{{ files|length }} item(s)</span>
     </div>
     <div class="card-body p-0">
         {% if files and files|length > 0 %}
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="filestable">
                 <thead>
                     <tr>
                         <th style="width: 40px;">#</th>
                         <th>Name</th>
-                        <th>File Type</th>
+                        <th>Type</th>
+                        <th>Size</th>
                         <th>Date Stored</th>
                         <th class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in files %}
-                    <tr>
+                    {% set ext = item.filenames.rsplit('.', 1)[-1].lower() if '.' in item.filenames else '' %}
+                    {% set cat = 'image' if ext in ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] else ('doc' if ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv'] else ('note' if ext in ['txt', 'md'] else 'other')) %}
+                    <tr class="filerow" data-name="{{ item.filenames|lower }}" data-cat="{{ cat }}">
                         <td class="text-muted">{{ loop.index }}</td>
                         <td>
-                            {% set ext = item.filenames.rsplit('.', 1)[-1].lower() if '.' in item.filenames else '' %}
-                            {% if ext in ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] %}
+                            {% if cat == 'image' %}
                                 <i class="fas fa-file-image mr-2" style="color: #4da3ff;"></i>
-                            {% elif ext in ['pdf'] %}
+                            {% elif ext == 'pdf' %}
                                 <i class="fas fa-file-pdf mr-2" style="color: #ff5c5c;"></i>
-                            {% elif ext in ['txt', 'md'] %}
+                            {% elif cat == 'note' %}
                                 <i class="fas fa-file-alt mr-2" style="color: #ffbc00;"></i>
                             {% elif ext in ['zip', 'rar', 'tar', 'gz'] %}
                                 <i class="fas fa-file-archive mr-2" style="color: #a855f7;"></i>
-                            {% elif ext in ['doc', 'docx'] %}
-                                <i class="fas fa-file-word mr-2" style="color: #2b7cd3;"></i>
-                            {% elif ext in ['xls', 'xlsx', 'csv'] %}
-                                <i class="fas fa-file-excel mr-2" style="color: #107c41;"></i>
                             {% else %}
                                 <i class="fas fa-file mr-2 text-secondary"></i>
                             {% endif %}
                             <span style="font-weight: 600; color: #ffffff;">{{ item.filenames }}</span>
                         </td>
                         <td>
-                            {% if ext %}
-                                <span class="badge-type">{{ ext|upper }}</span>
+                            <span class="badge-type">{{ ext|upper if ext else 'FILE' }}</span>
+                        </td>
+                        <td class="text-muted" style="font-size: 0.85rem;">
+                            {% if item.filesize and item.filesize > 1048576 %}
+                                {{ (item.filesize / 1048576)|round(1) }} MB
+                            {% elif item.filesize and item.filesize > 1024 %}
+                                {{ (item.filesize / 1024)|round(1) }} KB
+                            {% elif item.filesize %}
+                                {{ item.filesize }} B
                             {% else %}
-                                <span class="badge-type">FILE</span>
+                                -
                             {% endif %}
                         </td>
-                        <td class="text-muted" style="font-size: 0.9rem;">
+                        <td class="text-muted" style="font-size: 0.85rem;">
                             {% if item.date %}
-                                {{ item.date.strftime('%b %d, %Y - %I:%M %p') }}
+                                {{ item.date.strftime('%b %d, %Y') }}
                             {% else %}
                                 Today
                             {% endif %}
                         </td>
                         <td class="text-right">
-                            <a href="/download/{{ item.id }}" class="btn btn-sm btn-outline-primary mr-2">
-                                <i class="fas fa-download mr-1"></i> Download
+                            <a href="/share/{{ item.id }}" class="btn btn-sm btn-outline-secondary mr-1" title="Get share link">
+                                <i class="fas fa-share-alt"></i>
                             </a>
-                            <a href="/delete/{{ item.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to permanently delete this file?');">
-                                <i class="fas fa-trash-alt mr-1"></i> Delete
+                            <a href="/download/{{ item.id }}" class="btn btn-sm btn-outline-primary mr-1" title="Download">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <a href="/delete/{{ item.id }}" class="btn btn-sm btn-outline-danger" title="Move to trash">
+                                <i class="fas fa-trash-alt"></i>
                             </a>
                         </td>
                     </tr>
@@ -90,4 +122,36 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+let currentcat = 'all';
+
+function filterfiles() {
+    let q = document.getElementById('filesearch').value.toLowerCase();
+    let rows = document.querySelectorAll('.filerow');
+    let visible = 0;
+    rows.forEach(r => {
+        let name = r.getAttribute('data-name');
+        let cat = r.getAttribute('data-cat');
+        let matchq = name.includes(q);
+        let matchcat = (currentcat === 'all' || cat === currentcat);
+        if (matchq && matchcat) {
+            r.style.display = '';
+            visible++;
+        } else {
+            r.style.display = 'none';
+        }
+    });
+    let badge = document.getElementById('itemcount');
+    if (badge) badge.innerText = visible + ' item(s)';
+}
+
+function filtertype(t, btn) {
+    currentcat = t;
+    let btns = btn.parentElement.querySelectorAll('button');
+    btns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterfiles();
+}
+</script>
 {% endblock %}
